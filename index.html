@@ -725,7 +725,127 @@
             }
         }
 
-        @media (max-width: 768px) {
+        /* Reproductor de música */
+        .music-player {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(15px);
+            border-radius: 25px;
+            padding: 15px 20px;
+            z-index: 999;
+            border: 2px solid rgba(255,165,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s ease;
+            max-width: 300px;
+        }
+
+        .music-player:hover {
+            background: rgba(0,0,0,0.9);
+            border-color: #ffa500;
+            transform: scale(1.05);
+        }
+
+        .music-control {
+            background: linear-gradient(45deg, #ff6b6b, #ffa500);
+            border: none;
+            color: white;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255,107,107,0.3);
+        }
+
+        .music-control:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(255,107,107,0.5);
+        }
+
+        .music-control.playing {
+            animation: pulse 2s infinite;
+        }
+
+        .music-info {
+            color: white;
+            font-size: 0.9rem;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .music-title {
+            font-weight: 600;
+            color: #ffa500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .music-artist {
+            opacity: 0.8;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .volume-slider {
+            width: 60px;
+            height: 4px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 2px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            background: #ffa500;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        /* Visualizador de audio */
+        .audio-visualizer {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            height: 20px;
+        }
+
+        .audio-bar {
+            width: 3px;
+            background: linear-gradient(to top, #ff6b6b, #ffa500);
+            border-radius: 2px;
+            animation: audioWave 1.5s ease-in-out infinite;
+        }
+
+        .audio-bar:nth-child(1) { animation-delay: 0s; }
+        .audio-bar:nth-child(2) { animation-delay: 0.1s; }
+        .audio-bar:nth-child(3) { animation-delay: 0.2s; }
+        .audio-bar:nth-child(4) { animation-delay: 0.3s; }
+        .audio-bar:nth-child(5) { animation-delay: 0.4s; }
+
+        @keyframes audioWave {
+            0%, 100% { height: 4px; }
+            50% { height: 16px; }
+        }
             .hero-title { font-size: 2.5rem; }
             .hero-subtitle { font-size: 1.3rem; }
             .section-title { font-size: 2rem; }
@@ -795,6 +915,11 @@
             <div class="progress-fill"></div>
         </div>
     </div>
+
+    <!-- Música de fondo invisible -->
+    <audio id="backgroundMusic" loop autoplay style="display: none;">
+        <source src="musica/mi-querido-viejo.mp3" type="audio/mp3">
+    </audio>
 
     <div class="star-rain" id="starRain"></div>
     <div class="stars-container" id="starsContainer"></div>
@@ -900,6 +1025,10 @@
                         <p>Vacaciones increíbles</p>
                     </div>
                     <div class="photo-frame" onclick="photoClick(this)">
+                        <img src="imagenes/graduacion.jpg" alt="Momentos de orgullo" style="width: 100%; height: 200px; object-fit: cover; border-radius: 15px; margin-bottom: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+                        <p>Momentos de orgullo</p>
+                    </div>
+                    <div class="photo-frame" onclick="photoClick(this)">
                         <img src="imagenes/familia.jpg" alt="Días especiales" style="width: 100%; height: 200px; object-fit: cover; border-radius: 15px; margin-bottom: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
                         <p>Días normales, recuerdos especiales</p>
                     </div>
@@ -924,7 +1053,7 @@
             </p>
             <div class="signature">
                 Con todo mi amor,<br>
-                Tu hijo/a que te ama infinitamente ❤️
+                Tu hijo que te ama infinitamente ❤️
             </div>
         </section>
     </div>
@@ -943,6 +1072,31 @@
             cursor.style.left = e.clientX + 'px';
             cursor.style.top = e.clientY + 'px';
         });
+
+        function initBackgroundMusic() {
+            const backgroundMusic = document.getElementById('backgroundMusic');
+            
+            backgroundMusic.volume = 0.3;
+            
+            const playPromise = backgroundMusic.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    console.log('Música iniciada automáticamente');
+                }).catch(error => {
+                    console.log('Autoplay bloqueado, esperando interacción del usuario');
+                    
+                    const startMusicOnInteraction = () => {
+                        backgroundMusic.play().catch(e => console.log('Error al reproducir música'));
+                        document.removeEventListener('click', startMusicOnInteraction);
+                        document.removeEventListener('touchstart', startMusicOnInteraction);
+                    };
+                    
+                    document.addEventListener('click', startMusicOnInteraction);
+                    document.addEventListener('touchstart', startMusicOnInteraction);
+                });
+            }
+        }
 
         const surpriseMessages = {
             1: `🎈 ¿Recuerdas cuando me enseñaste a andar en moto? Ese día no solo aprendí a andar en moto, aprendí que contigo a mi lado podía lograr cualquier cosa. Ese recuerdo vive para siempre en mi corazón ❤️`,
@@ -1227,10 +1381,11 @@
             }, 4000);
 
             createStars();
+            initBackgroundMusic();
             setInterval(createFloatingHeart, 3000);
             
             setTimeout(() => {
-                alert('💖 ¡Hola papá Eugenio! 💖\n\nEsta página súper especial la hice con tecnología avanzada solo para ti.\n\n✨ Explora todos los elementos interactivos\n🎊 Haz clic en los emojis y cualidades\n📸 Toca las fotos para verlas animadas\n\n¡Disfruta tu regalo tecnológico! 🚀');
+                alert('💖 ¡Hola papá Eugenio! 💖\n\nEsta página súper especial la hice con tecnología avanzada solo para ti.\n\n✨ Explora todos los elementos interactivos\n🎵 Activa la música de fondo con el reproductor\n🎊 Haz clic en los emojis y cualidades\n📸 Toca las fotos para verlas animadas\n\n¡Disfruta tu regalo tecnológico! 🚀');
             }, 6000);
         }
 
